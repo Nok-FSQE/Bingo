@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PINGO — Quality Month 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',Arial,sans-serif; background:#0f172a; color:white; min-height:100vh; }
+
+.screen { display:none; min-height:100vh; flex-direction:column; }
+.screen.active { display:flex; }
+
+/* ── HOME ── */
+#home {
+  background:linear-gradient(135deg,#b80018 0%,#1a1a3e 50%,#1565a8 100%);
+  align-items:center; justify-content:center; text-align:center; padding:24px;
+}
+.home-logo { font-size:56px; margin-bottom:8px; }
+.home-title { font-size:36px; font-weight:900; letter-spacing:2px; }
+.home-title span { color:#a8d8f5; }
+.home-theme { font-size:13px; color:rgba(255,255,255,0.75); font-style:italic; margin:6px 0 4px; }
+.home-slogan { display:flex; gap:10px; justify-content:center; margin:10px 0 28px; }
+.sl { font-size:13px; font-weight:800; padding:4px 14px; border-radius:20px; }
+.sl-r{background:#b80018;color:white;}
+.sl-w{background:white;color:#b80018;}
+.sl-b{background:#1565a8;color:white;}
+.btn-start {
+  background:white; color:#b80018; font-size:18px; font-weight:900;
+  padding:16px 48px; border-radius:50px; border:none; cursor:pointer;
+  box-shadow:0 8px 32px rgba(0,0,0,0.3); transition:all .2s; letter-spacing:1px; margin:5px 0; display:block; width:260px;
+}
+.btn-start:hover { transform:translateY(-3px); }
+.btn-qr {
+  background:rgba(255,255,255,0.15); color:white; font-size:14px; font-weight:700;
+  padding:12px 32px; border-radius:50px; border:1.5px solid rgba(255,255,255,0.4);
+  cursor:pointer; transition:all .2s; margin:5px 0; display:block; width:260px;
+}
+.btn-qr:hover { background:rgba(255,255,255,0.25); }
+.home-sub { font-size:11px; color:rgba(255,255,255,0.5); margin-top:14px; line-height:1.8; }
+
+/* ── CARD SCREEN ── */
+#cardscreen { background:#0f172a; }
+.card-header {
+  background:linear-gradient(90deg,#b80018,#1565a8);
+  padding:10px 16px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
+}
+.ch-title { font-size:16px; font-weight:900; }
+.ch-title span { color:#a8d8f5; }
+.ch-timer { font-size:22px; font-weight:900; color:#fde047; font-variant-numeric:tabular-nums; }
+.ch-timer.warning { color:#f87171; animation:pulse .5s infinite; }
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.card-wrap { flex:1; padding:10px 12px; display:flex; flex-direction:column; overflow:hidden; }
+.bingo-hdr { display:flex; gap:3px; margin-bottom:4px; flex-shrink:0; }
+.bh { flex:1; height:32px; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:18px; color:white; border-radius:8px; }
+.bh1{background:#b80018;}.bh2{background:#1565a8;}.bh3{background:#b80018;}.bh4{background:#1565a8;}.bh5{background:#b80018;}
+
+.bingo-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:4px; flex:1; }
+.cell {
+  border-radius:10px; border:2px solid; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; text-align:center;
+  padding:4px 2px; cursor:pointer; transition:all .15s; min-height:68px;
+  position:relative; user-select:none;
+}
+.cell-p{background:#1a0305;border-color:#fca5a5;}
+.cell-v{background:#030e1a;border-color:#93c5fd;}
+.cell-g{background:#021a08;border-color:#86efac;}
+.cell-f{background:#1a1500;border-color:#fde047;}
+.cell-word{font-size:11px;font-weight:800;color:white;line-height:1.2;}
+.cell-th{font-size:8px;color:rgba(255,255,255,0.55);margin-top:2px;line-height:1.1;}
+.cell-concept{font-size:7px;font-weight:700;margin-top:3px;padding:1px 5px;border-radius:8px;}
+.concept-p{background:rgba(184,0,24,0.4);color:#fca5a5;}
+.concept-v{background:rgba(21,101,168,0.4);color:#93c5fd;}
+.concept-g{background:rgba(21,128,61,0.4);color:#86efac;}
+.cell.marked{background:#7c3aed!important;border-color:#c4b5fd!important;transform:scale(0.94);}
+.cell.marked::after{content:'✕';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:rgba(255,255,255,0.55);}
+.cell.marked .cell-word,.cell.marked .cell-th,.cell.marked .cell-concept{opacity:0.2;}
+.cell.free-cell{background:#1a1200;border-color:#fde047;}
+.cell.free-cell .cell-word{color:#fde047;font-size:18px;}
+
+.card-legend{display:flex;gap:10px;justify-content:center;padding:6px 0 2px;flex-wrap:wrap;flex-shrink:0;}
+.leg{display:flex;align-items:center;gap:4px;font-size:10px;color:rgba(255,255,255,0.7);}
+.leg-dot{width:10px;height:10px;border-radius:3px;}
+.status-bar{background:#1e293b;padding:6px 12px;font-size:10px;color:rgba(255,255,255,0.5);display:flex;justify-content:space-between;flex-shrink:0;}
+.bottom-bar{background:#1e293b;padding:8px 12px;display:flex;gap:8px;flex-shrink:0;}
+.btn{flex:1;padding:10px;border-radius:12px;border:none;cursor:pointer;font-size:13px;font-weight:800;transition:all .2s;}
+.btn:active{transform:scale(0.95);}
+.btn-new{background:#b80018;color:white;}
+.btn-check{background:#1565a8;color:white;}
+.btn-reset{background:#374151;color:white;}
+
+/* ── BINGO FLASH ── */
+.bingo-flash{position:fixed;inset:0;background:rgba(0,0,0,0.88);display:none;align-items:center;justify-content:center;z-index:999;flex-direction:column;text-align:center;padding:20px;}
+.bingo-flash.show{display:flex;}
+.bingo-flash h1{font-size:72px;font-weight:900;color:#fde047;animation:zoom .5s ease;}
+@keyframes zoom{0%{transform:scale(0)}80%{transform:scale(1.15)}100%{transform:scale(1)}}
+.btn-close-flash{background:#b80018;color:white;border:none;padding:12px 32px;border-radius:24px;font-size:16px;font-weight:800;cursor:pointer;margin-top:20px;}
+
+/* ── QR SCREEN ── */
+#qrscreen {
+  background:linear-gradient(135deg,#0f172a,#1a1a3e);
+  align-items:center; justify-content:flex-start; padding:24px 20px;
+  overflow-y:auto;
+}
+#qrscreen .inner { width:100%; max-width:360px; display:flex; flex-direction:column; align-items:center; text-align:center; }
+
+.qr-title { font-size:22px; font-weight:900; margin-bottom:6px; }
+.qr-sub { font-size:12px; color:rgba(255,255,255,0.65); margin-bottom:16px; line-height:1.7; }
+
+/* URL INPUT — always visible */
+.url-section {
+  background:rgba(255,255,255,0.07);
+  border:1.5px solid rgba(255,255,255,0.2);
+  border-radius:14px; padding:14px; width:100%; margin-bottom:16px;
+}
+.url-section label { font-size:9px; color:rgba(255,255,255,0.55); display:block; margin-bottom:6px; letter-spacing:1.5px; text-transform:uppercase; }
+.url-input {
+  background:rgba(255,255,255,0.12); border:1.5px solid rgba(255,255,255,0.25);
+  color:white; font-size:12px; width:100%; padding:9px 12px;
+  border-radius:10px; outline:none; margin-bottom:8px;
+}
+.url-input::placeholder { color:rgba(255,255,255,0.35); }
+.url-input:focus { border-color:#a8d8f5; background:rgba(255,255,255,0.18); }
+.btn-genqr {
+  background:linear-gradient(90deg,#b80018,#1565a8);
+  color:white; border:none; padding:10px; border-radius:10px;
+  font-size:13px; font-weight:800; cursor:pointer; width:100%;
+  transition:all .2s;
+}
+.btn-genqr:hover { opacity:0.9; transform:translateY(-1px); }
+.btn-genqr:active { transform:scale(0.97); }
+
+/* QR display box */
+.qr-display { background:white; padding:14px; border-radius:14px; margin-bottom:12px; box-shadow:0 8px 32px rgba(0,0,0,0.4); min-width:200px; min-height:200px; display:flex; align-items:center; justify-content:center; }
+#qrcode-div { display:flex; align-items:center; justify-content:center; }
+
+.qr-url-show {
+  font-size:10px; color:#a8d8f5;
+  background:rgba(255,255,255,0.08); padding:7px 12px;
+  border-radius:10px; word-break:break-all; width:100%;
+  margin-bottom:8px; line-height:1.5; display:none;
+}
+.qr-hint { font-size:10px; color:rgba(255,255,255,0.45); margin-bottom:16px; line-height:1.7; }
+
+.qr-step {
+  background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12);
+  border-radius:10px; padding:10px 12px; width:100%; text-align:left; margin-bottom:16px;
+}
+.qr-step-title { font-size:9px; font-weight:800; color:#fde047; letter-spacing:1px; text-transform:uppercase; margin-bottom:6px; }
+.qr-step div { font-size:10px; color:rgba(255,255,255,0.7); margin-bottom:3px; line-height:1.5; }
+
+.btn-back { background:rgba(255,255,255,0.15); color:white; border:1.5px solid rgba(255,255,255,0.3); padding:12px 32px; border-radius:24px; font-size:14px; font-weight:700; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<!-- ══ HOME ══ -->
+<div class="screen active" id="home">
+  <div class="home-logo">🎯</div>
+  <div class="home-title">QUALITY MONTH <span>PINGO</span></div>
+  <div class="home-theme">" Predictive Quality – From Insight to Break Away "</div>
+  <div class="home-theme" style="font-size:11px;margin-top:2px;color:rgba(255,255,255,0.65);">เรามองเห็นปัญหาก่อนเกิด และ Break Away จากวิธีเดิมๆ</div>
+  <div class="home-slogan">
+    <span class="sl sl-r">🔴 Predict</span>
+    <span class="sl sl-w">⚪ Prevent</span>
+    <span class="sl sl-b">🔵 Perform</span>
+  </div>
+  <button class="btn-start" onclick="startGame()">▶ &nbsp;START GAME</button>
+  <button class="btn-qr" onclick="showQR()">📱 &nbsp;QR Code for Players</button>
+  <div class="home-sub">
+    📅 Quality Month · 10–11 November 2026 · SQE Team<br>
+    ⏱️ 15 min / round &nbsp;·&nbsp; 👥 5–10 players &nbsp;·&nbsp; HDD Edition
+  </div>
+</div>
+
+<!-- ══ CARD SCREEN ══ -->
+<div class="screen" id="cardscreen">
+  <div class="card-header">
+    <div>
+      <div class="ch-title">🎯 PINGO — <span>HDD Edition</span></div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.6);" id="card-pid">Card ID: —</div>
+    </div>
+    <div style="text-align:center;">
+      <div style="font-size:9px;color:rgba(255,255,255,0.6);">TIME LEFT</div>
+      <div class="ch-timer" id="timer-display">15:00</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:9px;color:rgba(255,255,255,0.6);">MARKED</div>
+      <div style="font-size:20px;font-weight:900;color:#86efac;" id="marked-count">0/24</div>
+    </div>
+  </div>
+  <div class="card-wrap">
+    <div class="bingo-hdr">
+      <div class="bh bh1">B</div><div class="bh bh2">I</div><div class="bh bh3">N</div>
+      <div class="bh bh4">G</div><div class="bh bh5">O</div>
+    </div>
+    <div class="bingo-grid" id="bingo-grid"></div>
+    <div class="card-legend">
+      <div class="leg"><div class="leg-dot" style="background:#fca5a5;"></div>Predict</div>
+      <div class="leg"><div class="leg-dot" style="background:#93c5fd;"></div>Prevent</div>
+      <div class="leg"><div class="leg-dot" style="background:#86efac;"></div>Perform</div>
+      <div class="leg"><div class="leg-dot" style="background:#fde047;"></div>FREE</div>
+    </div>
+  </div>
+  <div class="status-bar">
+    <span id="bingo-status">Tap a cell to mark ✓</span>
+    <span id="line-count">Lines: 0</span>
+  </div>
+  <div class="bottom-bar">
+    <button class="btn btn-new" onclick="newCard()">🎲 New Card</button>
+    <button class="btn btn-check" onclick="checkBingo()">✅ Check PINGO!</button>
+    <button class="btn btn-reset" onclick="resetMarks()">↺ Reset</button>
+  </div>
+</div>
+
+<!-- ══ QR SCREEN ══ -->
+<div class="screen" id="qrscreen">
+  <div class="inner">
+    <div class="qr-title">📱 QR Code for Players</div>
+    <div class="qr-sub">
+      ใส่ URL ของหน้าเกมนี้แล้วกด Generate<br>
+      ผู้เล่น scan → เปิดเกมบนมือถือได้ทันที!
+    </div>
+
+    <!-- STEP: URL INPUT — always shown -->
+    <div class="url-section">
+      <label>🌐 URL ของหน้าเกม (GitHub Pages หรือ Link sharing)</label>
+      <input class="url-input" id="url-input" type="text"
+        placeholder="https://yourname.github.io/pingo/"
+        onkeydown="if(event.key==='Enter') generateQR()" />
+      <button class="btn-genqr" onclick="generateQR()">
+        🔄 &nbsp;Generate QR Code
+      </button>
+    </div>
+
+    <!-- QR DISPLAY -->
+    <div class="qr-display" id="qr-display">
+      <div id="qrcode-div" style="color:#94a3b8;font-size:11px;text-align:center;">
+        <div style="font-size:36px;margin-bottom:8px;">📋</div>
+        <div>ใส่ URL ด้านบน<br>แล้วกด Generate QR</div>
+      </div>
+    </div>
+
+    <!-- Generated URL display -->
+    <div class="qr-url-show" id="qr-url-show"></div>
+
+    <!-- Steps guide -->
+    <div class="qr-step">
+      <div class="qr-step-title">📋 วิธีใช้งาน QR</div>
+      <div>① Upload ไฟล์ HTML นี้ขึ้น <strong style="color:white;">GitHub Pages</strong></div>
+      <div>② Copy URL จาก GitHub → ใส่ในช่องด้านบน</div>
+      <div>③ กด Generate QR → แสดงบน TV / Print</div>
+      <div>④ ผู้เล่น Scan → กด <strong style="color:#a8d8f5;">New Card</strong> รับ card เฉพาะตัว</div>
+      <div style="margin-top:6px;color:#fde047;">💡 ถ้ายังไม่มี URL ทดสอบด้วย URL ใดก็ได้ก่อน</div>
+    </div>
+
+    <div class="qr-hint">
+      🔗 ตัวอย่าง URL: <span style="color:#a8d8f5;">https://yourname.github.io/pingo/</span><br>
+      📲 ผู้เล่นแต่ละคนกด "New Card" เพื่อรับ card เฉพาะตัว
+    </div>
+
+    <button class="btn-back" onclick="showScreen('home')">← Back to Home</button>
+  </div>
+</div>
+
+<!-- ══ BINGO FLASH ══ -->
+<div class="bingo-flash" id="bingo-flash">
+  <div style="font-size:48px;">🎉</div>
+  <h1>PINGO!</h1>
+  <p id="bingo-msg" style="font-size:18px;color:white;margin-top:8px;"></p>
+  <p id="bingo-time" style="font-size:13px;color:rgba(255,255,255,0.6);margin-top:4px;"></p>
+  <button class="btn-close-flash" onclick="closeBingoFlash()">🎁 Claim Reward!</button>
+</div>
+
+<script>
+// ══════════════════════════════
+// WORD LIST — HDD Edition (24)
+// ══════════════════════════════
+const WORDS = [
+  {w:"FMEA",        th:"วิเคราะห์ความเสี่ยง",    c:"p"},
+  {w:"RPN",         th:"ค่าความเสี่ยงรวม",        c:"p"},
+  {w:"EPL",         th:"ระดับ Error Proofing",    c:"p"},
+  {w:"Cpk",         th:"ดัชนีความสามารถ Process", c:"p"},
+  {w:"SPC",         th:"ควบคุมกระบวนการสถิติ",    c:"p"},
+  {w:"Excursion",   th:"เหตุการณ์เบี่ยงเบิน",     c:"p"},
+  {w:"Yield",       th:"อัตราผ่านงาน",             c:"p"},
+  {w:"Sigma",       th:"ระดับคุณภาพ 6σ",          c:"p"},
+  {w:"Trend",       th:"แนวโน้มปัญหา",             c:"p"},
+  {w:"Poka-yoke",   th:"ป้องกันความผิดพลาด",      c:"v"},
+  {w:"Control Plan",th:"แผนควบคุมการผลิต",        c:"v"},
+  {w:"Audit",       th:"ตรวจสอบ Supplier",         c:"v"},
+  {w:"5M1E",        th:"ปัจจัยกระบวนการ",          c:"v"},
+  {w:"Containment", th:"กักกันชิ้นงานเสี่ยง",      c:"v"},
+  {w:"Torque",      th:"แรงบิดขันสกรู HDD",        c:"v"},
+  {w:"Cleanliness", th:"ความสะอาด Clean Room",     c:"v"},
+  {w:"Inspection",  th:"ตรวจสอบชิ้นงาน",           c:"v"},
+  {w:"8D",          th:"แก้ปัญหา 8 ขั้นตอน",      c:"g"},
+  {w:"Root Cause",  th:"สาเหตุที่แท้จริง",         c:"g"},
+  {w:"Kaizen",      th:"ปรับปรุงต่อเนื่อง",        c:"g"},
+  {w:"PDCA",        th:"วงจรปรับปรุง",             c:"g"},
+  {w:"FRR",         th:"Field Return Rate",        c:"g"},
+  {w:"Corrective",  th:"แก้ไขที่ต้นเหตุ",          c:"g"},
+  {w:"Scorecard",   th:"บัตรประเมิน Supplier",     c:"g"},
+];
+const CM = {p:"Predict", v:"Prevent", g:"Perform"};
+
+// STATE
+let currentCard=[], marked=new Set();
+let timerInterval=null, secondsLeft=900, gameStarted=false, cardSeed=0;
+
+// ── RNG ──
+function rng(seed){ let s=seed; return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
+function shuffle(arr,seed){
+  const fn=rng(seed), a=[...arr];
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(fn()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function genCard(seed){
+  const p=shuffle(WORDS,seed).slice(0,24);
+  return [...p.slice(0,12),{w:"⭐ FREE",th:"Free Space!",c:"f",free:true},...p.slice(12)];
+}
+
+// ── SCREEN ──
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ── TIMER ──
+function startTimer(){
+  clearInterval(timerInterval); secondsLeft=900; updTimer();
+  timerInterval=setInterval(()=>{ secondsLeft--; updTimer();
+    if(secondsLeft<=0){ clearInterval(timerInterval);
+      const el=document.getElementById('timer-display');
+      el.textContent="TIME UP!"; el.style.color='#f87171'; }
+  },1000);
+}
+function updTimer(){
+  const m=Math.floor(secondsLeft/60), s=secondsLeft%60;
+  const el=document.getElementById('timer-display');
+  el.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  el.classList.toggle('warning',secondsLeft<=60);
+}
+
+// ── RENDER ──
+function renderCard(){
+  const g=document.getElementById('bingo-grid');
+  g.innerHTML=''; marked.clear();
+  currentCard.forEach((item,idx)=>{
+    const c=document.createElement('div');
+    c.className=`cell ${item.free?'free-cell':'cell-'+item.c}`;
+    c.dataset.idx=idx;
+    if(item.free){
+      c.innerHTML=`<div class="cell-word">${item.w}</div><div class="cell-th">${item.th}</div>`;
+      c.classList.add('marked'); marked.add(idx);
+    } else {
+      c.innerHTML=`<div class="cell-word">${item.w}</div><div class="cell-th">${item.th}</div><div class="cell-concept concept-${item.c}">${CM[item.c]}</div>`;
+      c.addEventListener('click',()=>toggle(idx));
+    }
+    g.appendChild(c);
+  });
+  updCounts();
+}
+function toggle(idx){
+  const c=document.querySelector(`[data-idx="${idx}"]`);
+  if(!c||currentCard[idx]?.free) return;
+  marked.has(idx)?(marked.delete(idx),c.classList.remove('marked')):(marked.add(idx),c.classList.add('marked'));
+  updCounts();
+}
+function updCounts(){
+  const r=marked.size-(marked.has(12)?1:0);
+  document.getElementById('marked-count').textContent=`${r}/24`;
+  const l=cntLines();
+  document.getElementById('line-count').textContent=`Lines:${l}`;
+  const st=document.getElementById('bingo-status');
+  l>0?(st.textContent=`🎉 ${l} line(s)! Press Check!`,st.style.color='#fde047'):(st.textContent='Tap a cell to mark ✓',st.style.color='');
+}
+
+// ── BINGO ──
+function cntLines(){
+  let n=0;
+  for(let r=0;r<5;r++) if([0,1,2,3,4].every(c=>marked.has(r*5+c)))n++;
+  for(let c=0;c<5;c++) if([0,1,2,3,4].every(r=>marked.has(r*5+c)))n++;
+  if([0,6,12,18,24].every(i=>marked.has(i)))n++;
+  if([4,8,12,16,20].every(i=>marked.has(i)))n++;
+  return n;
+}
+function checkBingo(){
+  const l=cntLines();
+  if(l>0){
+    const e=900-secondsLeft,em=Math.floor(e/60),es=e%60;
+    document.getElementById('bingo-msg').textContent=`${l} PINGO line${l>1?'s':''}! 🎊`;
+    document.getElementById('bingo-time').textContent=`⏱️ Time: ${String(em).padStart(2,'0')}:${String(es).padStart(2,'0')}`;
+    document.getElementById('bingo-flash').classList.add('show');
+  } else {
+    const st=document.getElementById('bingo-status');
+    st.textContent='❌ No PINGO yet — keep going!'; st.style.color='#f87171';
+  }
+}
+function closeBingoFlash(){ document.getElementById('bingo-flash').classList.remove('show'); }
+
+// ── GAME ACTIONS ──
+function startGame(){
+  cardSeed=Date.now()+Math.floor(Math.random()*99999);
+  currentCard=genCard(cardSeed);
+  document.getElementById('card-pid').textContent=`Card ID: #${(cardSeed%99999).toString().padStart(5,'0')}`;
+  showScreen('cardscreen'); renderCard();
+  if(!gameStarted){ startTimer(); gameStarted=true; }
+}
+function newCard(){
+  if(!confirm('Generate new card? Marks will be cleared.')) return;
+  cardSeed=Date.now()+Math.floor(Math.random()*99999);
+  currentCard=genCard(cardSeed);
+  document.getElementById('card-pid').textContent=`Card ID: #${(cardSeed%99999).toString().padStart(5,'0')}`;
+  renderCard();
+}
+function resetMarks(){
+  marked.clear();
+  document.querySelectorAll('.cell').forEach(c=>{ if(!c.classList.contains('free-cell')) c.classList.remove('marked'); });
+  marked.add(12);
+  const fc=document.querySelector('[data-idx="12"]');
+  if(fc) fc.classList.add('marked');
+  updCounts();
+}
+
+// ── QR ──
+let qrObj=null;
+function showQR(){
+  showScreen('qrscreen');
+  // Auto-detect if running on real server
+  const url=window.location.href;
+  const input=document.getElementById('url-input');
+  if(!url.startsWith('file://') && !url.startsWith('about:')){
+    input.value=url.split('?')[0];
+    generateQR();
+  }
+}
+function generateQR(){
+  const raw=document.getElementById('url-input').value.trim();
+  if(!raw){ alert('กรุณาใส่ URL ก่อนค่ะ'); return; }
+  let url=raw;
+  if(!url.startsWith('http')) url='https://'+url;
+
+  // Clear previous QR
+  const div=document.getElementById('qrcode-div');
+  div.innerHTML='';
+  qrObj=null;
+
+  try {
+    qrObj=new QRCode(div,{
+      text: url,
+      width: 200,
+      height: 200,
+      colorDark: "#0f172a",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.M
+    });
+    // Show URL
+    const show=document.getElementById('qr-url-show');
+    show.textContent='🔗 '+url;
+    show.style.display='block';
+  } catch(err){
+    div.innerHTML=`<div style="color:#b91c1c;font-size:11px;padding:16px;text-align:center;">❌ Error: ${err.message}</div>`;
+  }
+}
+
+// ── SEED FROM URL ──
+window.addEventListener('load',()=>{
+  const p=new URLSearchParams(window.location.search);
+  const seed=p.get('seed');
+  if(seed){
+    cardSeed=parseInt(seed)||Date.now();
+    currentCard=genCard(cardSeed);
+    document.getElementById('card-pid').textContent=`Card ID: #${(cardSeed%99999).toString().padStart(5,'0')}`;
+    showScreen('cardscreen'); renderCard(); startTimer(); gameStarted=true;
+  }
+});
+</script>
+</body>
+</html>
